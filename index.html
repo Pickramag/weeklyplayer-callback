@@ -5,13 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connecting to WeeklyPlayer...</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -43,35 +39,11 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    .success {
-      color: #10b981;
-      margin-top: 20px;
-      font-size: 1.1em;
-      animation: fadeIn 0.5s ease;
-    }
-    .error {
-      color: #ef4444;
-      margin-top: 20px;
-      animation: fadeIn 0.5s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .icon {
-      font-size: 64px;
-      margin-bottom: 20px;
-    }
-    h1 {
-      font-size: 28px;
-      margin-bottom: 15px;
-      font-weight: 600;
-    }
-    p {
-      color: #94a3b8;
-      line-height: 1.6;
-      margin-bottom: 10px;
-    }
+    .success { color: #10b981; margin-top: 20px; font-size: 1.1em; }
+    .error { color: #ef4444; margin-top: 20px; }
+    .icon { font-size: 64px; margin-bottom: 20px; }
+    h1 { font-size: 28px; margin-bottom: 15px; font-weight: 600; }
+    p { color: #94a3b8; line-height: 1.6; margin-bottom: 10px; }
     .close-btn {
       margin-top: 30px;
       padding: 12px 30px;
@@ -82,15 +54,9 @@
       cursor: pointer;
       font-size: 16px;
       font-weight: 600;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.2s;
     }
-    .close-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(249, 115, 22, 0.4);
-    }
-    .close-btn:active {
-      transform: translateY(0);
-    }
+    .close-btn:hover { transform: translateY(-2px); }
   </style>
 </head>
 <body>
@@ -115,9 +81,6 @@
     const code = params.get('code');
     const error = params.get('error');
     
-    let attemptCount = 0;
-    let successShown = false;
-    
     function attemptRedirect() {
       if (error) {
         showError('❌ Ошибка авторизации: ' + error);
@@ -129,48 +92,25 @@
         return;
       }
       
-      attemptCount++;
-      
-      // Пробуем разные методы открытия приложения
       const customUrl = 'weeklyplayer://oauth-callback?code=' + encodeURIComponent(code);
       
-      // Метод 1: window.location
+      // Пробуем открыть приложение
       window.location.href = customUrl;
       
-      // Метод 2: Создание скрытой ссылки
+      // Показываем успех через 2 секунды
       setTimeout(() => {
-        const link = document.createElement('a');
-        link.href = customUrl;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }, 100);
-      
-      // Метод 3: window.open
-      setTimeout(() => {
-        window.open(customUrl, '_blank');
-      }, 200);
-      
-      // Показываем успех через 2 секунды (приложение должно уже получить код)
-      setTimeout(() => {
-        if (!successShown) {
-          showSuccess();
-        }
+        showSuccess();
       }, 2000);
     }
     
     function showSuccess() {
-      successShown = true;
       document.getElementById('spinner').style.display = 'none';
       document.getElementById('status').style.display = 'none';
       document.getElementById('success').style.display = 'block';
       document.getElementById('closeBtn').style.display = 'inline-block';
       
-      // Автоматически закрываем через 5 секунд
-      setTimeout(() => {
-        closeWindow();
-      }, 5000);
+      // Пробуем закрыть через 5 секунд
+      setTimeout(() => closeWindow(), 5000);
     }
     
     function showError(msg) {
@@ -182,10 +122,7 @@
     }
     
     function closeWindow() {
-      // Пробуем закрыть окно
       window.close();
-      
-      // Если не получилось — показываем инструкцию
       setTimeout(() => {
         if (!window.closed) {
           document.getElementById('error').innerHTML = 
@@ -196,14 +133,8 @@
       }, 500);
     }
     
-    // Запускаем при загрузке
     window.addEventListener('load', attemptRedirect);
-    
-    // Логирование для отладки
-    console.log('🎵 WeeklyPlayer OAuth Callback');
     console.log('Code:', code ? code.substring(0, 20) + '...' : 'none');
-    console.log('Error:', error);
-    console.log('Full URL:', window.location.href);
   </script>
 </body>
 </html>
