@@ -1,24 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connecting to WeeklyPlayer...</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
-      font-family: Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
+      min-height: 100vh;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       color: white;
+      padding: 20px;
     }
     .container {
       text-align: center;
       padding: 40px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
       border-radius: 20px;
       backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      max-width: 500px;
+      width: 100%;
     }
     .spinner {
       border: 4px solid rgba(255,255,255,0.1);
@@ -27,121 +37,173 @@
       width: 50px;
       height: 50px;
       animation: spin 1s linear infinite;
-      margin: 20px auto;
+      margin: 30px auto;
     }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    .error {
-      color: #ef4444;
-      margin-top: 20px;
-    }
     .success {
       color: #10b981;
       margin-top: 20px;
+      font-size: 1.1em;
+      animation: fadeIn 0.5s ease;
     }
-    button {
+    .error {
+      color: #ef4444;
       margin-top: 20px;
-      padding: 10px 20px;
-      background: #f97316;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+    p {
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .close-btn {
+      margin-top: 30px;
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       color: white;
       cursor: pointer;
       font-size: 16px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    button:hover {
-      background: #ea580c;
+    .close-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(249, 115, 22, 0.4);
+    }
+    .close-btn:active {
+      transform: translateY(0);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🎵 Подключение к WeeklyPlayer</h1>
+    <div class="icon">🎵</div>
+    <h1>Подключение к WeeklyPlayer</h1>
     <div class="spinner" id="spinner"></div>
-    <p id="status">Ожидание ответа от приложения...</p>
+    <p id="status">Подождите, происходит подключение...</p>
+    <div id="success" class="success" style="display: none;">
+      ✅ <strong>Успешно!</strong><br>
+      Приложение получило код авторизации.<br>
+      Можете закрыть это окно.
+    </div>
     <div id="error" class="error" style="display: none;"></div>
-    <button id="retryBtn" onclick="retry()" style="display: none;">Попробовать снова</button>
-    
-    <script>
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      const error = params.get('error');
-      
-      let attemptCount = 0;
-      
-      function attemptRedirect() {
-        if (error) {
-          showError('Ошибка авторизации: ' + error);
-          return;
-        }
-        
-        if (!code) {
-          showError('Код авторизации не получен');
-          return;
-        }
-        
-        attemptCount++;
-        
-        // Пробуем разные методы редиректа
-        const customUrl = 'weeklyplayer://oauth-callback?code=' + encodeURIComponent(code);
-        
-        // Метод 1: window.location
-        window.location.href = customUrl;
-        
-        // Метод 2: window.open (через 500мс)
-        setTimeout(() => {
-          window.open(customUrl, '_blank');
-        }, 500);
-        
-        // Метод 3: создание скрытой ссылки
-        setTimeout(() => {
-          const link = document.createElement('a');
-          link.href = customUrl;
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }, 1000);
-        
-        // Если через 3 секунды всё ещё здесь — показываем инструкцию
-        setTimeout(() => {
-          if (attemptCount === 1) {
-            showManualInstructions(code);
-          }
-        }, 3000);
-      }
-      
-      function showError(msg) {
-        document.getElementById('spinner').style.display = 'none';
-        document.getElementById('status').style.display = 'none';
-        document.getElementById('error').textContent = msg;
-        document.getElementById('error').style.display = 'block';
-        document.getElementById('retryBtn').style.display = 'inline-block';
-      }
-      
-      function showManualInstructions(code) {
-        document.getElementById('spinner').style.display = 'none';
-        document.getElementById('status').innerHTML = 
-          '⚠️ Приложение не открылось автоматически.<br>' +
-          'Если WeeklyPlayer запущен — авторизация должна произойти автоматически.<br>' +
-          'Если нет — перезапустите приложение и попробуйте войти снова.';
-        document.getElementById('status').className = 'success';
-        document.getElementById('retryBtn').style.display = 'inline-block';
-      }
-      
-      function retry() {
-        window.location.href = window.location.href;
-      }
-      
-      // Запускаем при загрузке
-      attemptRedirect();
-      
-      // Показываем информацию для отладки
-      console.log('Code:', code);
-      console.log('Redirect URL:', 'weeklyplayer://oauth-callback?code=' + code);
-    </script>
+    <button class="close-btn" id="closeBtn" onclick="closeWindow()" style="display: none;">
+      Закрыть окно
+    </button>
   </div>
+  
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const error = params.get('error');
+    
+    let attemptCount = 0;
+    let successShown = false;
+    
+    function attemptRedirect() {
+      if (error) {
+        showError('❌ Ошибка авторизации: ' + error);
+        return;
+      }
+      
+      if (!code) {
+        showError('❌ Код авторизации не получен');
+        return;
+      }
+      
+      attemptCount++;
+      
+      // Пробуем разные методы открытия приложения
+      const customUrl = 'weeklyplayer://oauth-callback?code=' + encodeURIComponent(code);
+      
+      // Метод 1: window.location
+      window.location.href = customUrl;
+      
+      // Метод 2: Создание скрытой ссылки
+      setTimeout(() => {
+        const link = document.createElement('a');
+        link.href = customUrl;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, 100);
+      
+      // Метод 3: window.open
+      setTimeout(() => {
+        window.open(customUrl, '_blank');
+      }, 200);
+      
+      // Показываем успех через 2 секунды (приложение должно уже получить код)
+      setTimeout(() => {
+        if (!successShown) {
+          showSuccess();
+        }
+      }, 2000);
+    }
+    
+    function showSuccess() {
+      successShown = true;
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('status').style.display = 'none';
+      document.getElementById('success').style.display = 'block';
+      document.getElementById('closeBtn').style.display = 'inline-block';
+      
+      // Автоматически закрываем через 5 секунд
+      setTimeout(() => {
+        closeWindow();
+      }, 5000);
+    }
+    
+    function showError(msg) {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('status').style.display = 'none';
+      document.getElementById('error').innerHTML = msg;
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('closeBtn').style.display = 'inline-block';
+    }
+    
+    function closeWindow() {
+      // Пробуем закрыть окно
+      window.close();
+      
+      // Если не получилось — показываем инструкцию
+      setTimeout(() => {
+        if (!window.closed) {
+          document.getElementById('error').innerHTML = 
+            '⚠️ Не удалось закрыть окно автоматически.<br>' +
+            'Если WeeklyPlayer открылся — можете закрыть эту вкладку вручную.';
+          document.getElementById('error').style.display = 'block';
+        }
+      }, 500);
+    }
+    
+    // Запускаем при загрузке
+    window.addEventListener('load', attemptRedirect);
+    
+    // Логирование для отладки
+    console.log('🎵 WeeklyPlayer OAuth Callback');
+    console.log('Code:', code ? code.substring(0, 20) + '...' : 'none');
+    console.log('Error:', error);
+    console.log('Full URL:', window.location.href);
+  </script>
 </body>
 </html>
