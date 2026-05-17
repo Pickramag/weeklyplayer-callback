@@ -81,11 +81,19 @@
       document.getElementById('error').innerHTML = '❌ Ошибка: ' + error;
       document.getElementById('error').style.display = 'block';
     } else if (code) {
-      // Отправляем код в главное окно
-      window.opener.postMessage({
+      // Отправляем через postMessage (если окно ещё открыто)
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({
         type: 'AUTH_SUCCESS',
         code: code
       }, '*');
+    }
+  
+     // 🔥 И перенаправляем на localhost (Tauri перехватит)
+    setTimeout(() => {
+      window.location.href = `http://localhost:1420?code=${encodeURIComponent(code)}`;
+    }, 1000);
+  }
       
       // Показываем успех
       setTimeout(() => {
