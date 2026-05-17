@@ -44,19 +44,13 @@
     .icon { font-size: 64px; margin-bottom: 20px; }
     h1 { font-size: 28px; margin-bottom: 15px; font-weight: 600; }
     p { color: #94a3b8; line-height: 1.6; margin-bottom: 10px; }
-    .close-btn {
-      margin-top: 30px;
-      padding: 12px 30px;
-      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-      border: none;
+    .redirect-text {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(249, 115, 22, 0.1);
       border-radius: 10px;
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 600;
-      transition: transform 0.2s;
+      border: 1px solid rgba(249, 115, 22, 0.3);
     }
-    .close-btn:hover { transform: translateY(-2px); }
   </style>
 </head>
 <body>
@@ -64,16 +58,17 @@
     <div class="icon">🎵</div>
     <h1>Подключение к WeeklyPlayer</h1>
     <div class="spinner" id="spinner"></div>
-    <p id="status">Подождите, происходит подключение...</p>
+    <p id="status">Обработка авторизации...</p>
     <div id="success" class="success" style="display: none;">
       ✅ <strong>Успешно!</strong><br>
-      Приложение получило код авторизации.<br>
-      Можете закрыть это окно.
+      Авторизация прошла успешно.<br>
+      Перенаправление в приложение...
     </div>
     <div id="error" class="error" style="display: none;"></div>
-    <button class="close-btn" id="closeBtn" onclick="closeWindow()" style="display: none;">
-      Закрыть окно
-    </button>
+    <div class="redirect-text" id="redirectInfo" style="display: none;">
+      <small>Если перенаправление не произошло автоматически,<br>
+      <a href="#" onclick="window.close(); return false;" style="color: #f97316;">закройте это окно</a> и вернитесь в приложение</small>
+    </div>
   </div>
   
   <script>
@@ -81,60 +76,37 @@
     const code = params.get('code');
     const error = params.get('error');
     
-    function attemptRedirect() {
-      if (error) {
-        showError('❌ Ошибка авторизации: ' + error);
-        return;
-      }
-      
-      if (!code) {
-        showError('❌ Код авторизации не получен');
-        return;
-      }
-      
-      const customUrl = 'weeklyplayer://oauth-callback?code=' + encodeURIComponent(code);
-      
-      // Пробуем открыть приложение
-      window.location.href = customUrl;
-      
-      // Показываем успех через 2 секунды
-      setTimeout(() => {
-        showSuccess();
-      }, 2000);
-    }
-    
-    function showSuccess() {
-      document.getElementById('spinner').style.display = 'none';
-      document.getElementById('status').style.display = 'none';
-      document.getElementById('success').style.display = 'block';
-      document.getElementById('closeBtn').style.display = 'inline-block';
-      
-      // Пробуем закрыть через 5 секунд
-      setTimeout(() => closeWindow(), 5000);
-    }
-    
-    function showError(msg) {
-      document.getElementById('spinner').style.display = 'none';
-      document.getElementById('status').style.display = 'none';
-      document.getElementById('error').innerHTML = msg;
-      document.getElementById('error').style.display = 'block';
-      document.getElementById('closeBtn').style.display = 'inline-block';
-    }
-    
-    function closeWindow() {
-      window.close();
-      setTimeout(() => {
-        if (!window.closed) {
-          document.getElementById('error').innerHTML = 
-            '⚠️ Не удалось закрыть окно автоматически.<br>' +
-            'Если WeeklyPlayer открылся — можете закрыть эту вкладку вручную.';
-          document.getElementById('error').style.display = 'block';
-        }
-      }, 500);
-    }
-    
-    window.addEventListener('load', attemptRedirect);
+    console.log('🎵 WeeklyPlayer OAuth Callback');
     console.log('Code:', code ? code.substring(0, 20) + '...' : 'none');
+    console.log('Error:', error);
+    console.log('Full URL:', window.location.href);
+    
+    // Если есть код — показываем успех и ждём
+    // Приложение само обнаружит код в своём окне после редиректа
+    if (error) {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('status').style.display = 'none';
+      document.getElementById('error').innerHTML = '❌ Ошибка авторизации: ' + error;
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('redirectInfo').style.display = 'block';
+    } else if (code) {
+      // Показываем успех
+      setTimeout(() => {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('status').style.display = 'none';
+        document.getElementById('success').style.display = 'block';
+        document.getElementById('redirectInfo').style.display = 'block';
+      }, 1000);
+      
+      // Пробуем закрыть окно через 3 секунды
+      setTimeout(() => {
+        window.close();
+      }, 3000);
+    } else {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('status').innerHTML = '⚠️ Код авторизации не получен';
+      document.getElementById('redirectInfo').style.display = 'block';
+    }
   </script>
 </body>
 </html>
