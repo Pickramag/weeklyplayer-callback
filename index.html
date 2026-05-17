@@ -73,47 +73,53 @@
   </div>
   
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const error = params.get('error');
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const error = params.get('error');
+  
+  console.log('🎵 WeeklyPlayer OAuth Callback');
+  console.log('Code:', code ? code.substring(0, 20) + '...' : 'none');
+  
+  if (error) {
+    // Отправляем ошибку
+    if (window.opener) {
+      window.opener.postMessage({
+        type: 'AUTH_ERROR',
+        error: error
+      }, '*');
+    }
     
-    console.log('🎵 WeeklyPlayer OAuth Callback');
-    console.log('Code:', code ? code.substring(0, 20) + '...' : 'none');
-    console.log('Error:', error);
-    console.log('Full URL:', window.location.href);
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('status').style.display = 'none';
+    document.getElementById('error').innerHTML = '❌ Ошибка: ' + error;
+    document.getElementById('error').style.display = 'block';
+  } else if (code) {
+    // 🔥 Отправляем код через postMessage
+    if (window.opener && !window.opener.closed) {
+      console.log('📨 Sending code to opener...');
+      window.opener.postMessage({
+        type: 'AUTH_SUCCESS',
+        code: code
+      }, '*');
+    } else {
+      console.warn('⚠️ No opener window found');
+    }
     
-    if (error) {
+    // Показываем успех
+    setTimeout(() => {
       document.getElementById('spinner').style.display = 'none';
       document.getElementById('status').style.display = 'none';
-      document.getElementById('error').innerHTML = '❌ Ошибка авторизации: ' + error;
-      document.getElementById('error').style.display = 'block';
-      document.getElementById('redirectInfo').style.display = 'block';
-    } else if (code) {
-      // Показываем успех
-      setTimeout(() => {
-        document.getElementById('spinner').style.display = 'none';
-        document.getElementById('status').style.display = 'none';
-        document.getElementById('success').style.display = 'block';
-        document.getElementById('redirectInfo').style.display = 'block';
-      }, 1000);
-      
-      // 🔥 Перенаправляем на localhost:1420 (Tauri перехватит)
-      setTimeout(() => {
-        console.log('🔄 Redirecting to:', 'http://localhost:1420?code=' + encodeURIComponent(code));
-        window.location.href = 'http://localhost:1420?code=' + encodeURIComponent(code);
-      }, 1500);
-      
-      // Если не сработало — показываем инструкцию
-      setTimeout(() => {
-        if (!document.getElementById('success').style.display === 'none') {
-          document.getElementById('redirectInfo').style.display = 'block';
-        }
-      }, 3000);
-    } else {
-      document.getElementById('spinner').style.display = 'none';
-      document.getElementById('status').innerHTML = '⚠️ Код авторизации не получен';
-      document.getElementById('redirectInfo').style.display = 'block';
-    }
-  </script>
+      document.getElementById('success').style.display = 'block';
+    }, 500);
+    
+    // Закрываем окно через 2 секунды
+    setTimeout(() => {
+      window.close();
+    }, 2000);
+  } else {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('status').innerHTML = '⚠️ Код не получен';
+  }
+</script>
 </body>
 </html>
