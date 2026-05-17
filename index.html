@@ -5,13 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connecting to WeeklyPlayer...</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -39,39 +35,12 @@
       animation: spin 1s linear infinite;
       margin: 30px auto;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .success {
-      color: #10b981;
-      margin-top: 20px;
-      font-size: 1.1em;
-      animation: fadeIn 0.5s ease;
-    }
-    .error {
-      color: #ef4444;
-      margin-top: 20px;
-      animation: fadeIn 0.5s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .icon {
-      font-size: 64px;
-      margin-bottom: 20px;
-    }
-    h1 {
-      font-size: 28px;
-      margin-bottom: 15px;
-      font-weight: 600;
-    }
-    p {
-      color: #94a3b8;
-      line-height: 1.6;
-      margin-bottom: 10px;
-    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .success { color: #10b981; margin-top: 20px; font-size: 1.1em; }
+    .error { color: #ef4444; margin-top: 20px; }
+    .icon { font-size: 64px; margin-bottom: 20px; }
+    h1 { font-size: 28px; margin-bottom: 15px; font-weight: 600; }
+    p { color: #94a3b8; line-height: 1.6; margin-bottom: 10px; }
     .redirect-info {
       margin-top: 20px;
       padding: 15px;
@@ -92,20 +61,7 @@
       font-weight: 600;
       transition: all 0.2s;
     }
-    .redirect-info button:hover {
-      background: #ea580c;
-      transform: translateY(-2px);
-    }
-    .debug-info {
-      margin-top: 20px;
-      padding: 10px;
-      background: rgba(0,0,0,0.3);
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 12px;
-      text-align: left;
-      word-break: break-all;
-    }
+    .redirect-info button:hover { background: #ea580c; transform: translateY(-2px); }
   </style>
 </head>
 <body>
@@ -113,20 +69,16 @@
     <div class="icon">🎵</div>
     <h1>Подключение к WeeklyPlayer</h1>
     <div class="spinner" id="spinner"></div>
-    <p id="status">Обработка авторизации...</p>
+    <p id="status">Перенаправление в приложение...</p>
     <div id="success" class="success" style="display: none;">
       ✅ <strong>Успешно!</strong><br>
       Авторизация прошла успешно.<br>
-      Код сохранён. Возврат в приложение...
+      Возврат в приложение...
     </div>
     <div id="error" class="error" style="display: none;"></div>
     <div class="redirect-info" id="redirectInfo" style="display: none;">
-      <p style="margin-bottom: 10px;">⚠️ Если перенаправление не произошло автоматически:</p>
-      <button onclick="manualReturn()">Вернуться в приложение</button>
-    </div>
-    <div class="debug-info" id="debugInfo" style="display: none;">
-      <strong>Debug Info:</strong><br>
-      <span id="debugContent"></span>
+      🔁 Если перенаправление не произошло,<br>
+      просто вернитесь в приложение WeeklyPlayer
     </div>
   </div>
   
@@ -138,75 +90,34 @@
     console.log('🎵 WeeklyPlayer OAuth Callback');
     console.log('Code:', code ? code.substring(0, 20) + '...' : 'none');
     console.log('Error:', error);
-    console.log('Full URL:', window.location.href);
-    
-    // Показываем debug инфо
-    const debugInfo = document.getElementById('debugInfo');
-    const debugContent = document.getElementById('debugContent');
-    debugInfo.style.display = 'block';
-    debugContent.innerHTML = `
-      Code: ${code ? code.substring(0, 50) + '...' : 'none'}<br>
-      Error: ${error || 'none'}<br>
-      URL: ${window.location.href.substring(0, 100)}...
-    `;
-    
-    function manualReturn() {
-      const code = new URLSearchParams(window.location.search).get('code');
-      if (code) {
-        // Сохраняем код в localStorage
-        localStorage.setItem('wp_auth_code', code);
-        localStorage.setItem('wp_auth_timestamp', Date.now().toString());
-        console.log('💾 Code saved to localStorage (manual)');
-        alert('✅ Код сохранён! Теперь закройте это окно и вернитесь в приложение WeeklyPlayer.');
-        window.close();
-      } else {
-        alert('⚠️ Код авторизации не найден в URL');
-      }
-    }
     
     if (error) {
-      console.error('❌ Auth error:', error);
-      
-      // Сохраняем ошибку
-      localStorage.setItem('wp_auth_error', error);
-      localStorage.setItem('wp_auth_timestamp', Date.now().toString());
-      
       document.getElementById('spinner').style.display = 'none';
       document.getElementById('status').style.display = 'none';
       document.getElementById('error').innerHTML = '❌ Ошибка авторизации: ' + error;
       document.getElementById('error').style.display = 'block';
       document.getElementById('redirectInfo').style.display = 'block';
     } else if (code) {
-      console.log('✅ Code received:', code.substring(0, 20) + '...');
-      
-      // 🔥 Сохраняем код в localStorage
-      localStorage.setItem('wp_auth_code', code);
-      localStorage.setItem('wp_auth_timestamp', Date.now().toString());
-      console.log('💾 Code saved to localStorage');
-      
       // Показываем успех
       setTimeout(() => {
         document.getElementById('spinner').style.display = 'none';
         document.getElementById('status').style.display = 'none';
         document.getElementById('success').style.display = 'block';
-      }, 1000);
+      }, 500);
       
-      // Пробуем закрыть окно через 3 секунды
+      // 🔥 Перенаправляем на localhost:1420 (Tauri перехватит в production)
       setTimeout(() => {
-        console.log('🪟 Attempting to close window...');
-        window.close();
-        
-        // Если не закрылось — показываем инструкцию
-        setTimeout(() => {
-          if (!window.closed) {
-            document.getElementById('redirectInfo').style.display = 'block';
-          }
-        }, 500);
-      }, 3000);
+        console.log('🔄 Redirecting to app:', 'http://localhost:1420?code=' + encodeURIComponent(code));
+        window.location.href = 'http://localhost:1420?code=' + encodeURIComponent(code);
+      }, 1500);
+      
+      // Если не сработало — показываем инструкцию
+      setTimeout(() => {
+        document.getElementById('redirectInfo').style.display = 'block';
+      }, 4000);
     } else {
-      console.warn('⚠️ No code or error in URL');
       document.getElementById('spinner').style.display = 'none';
-      document.getElementById('status').innerHTML = '⚠️ Код авторизации не получен<br>Проверьте URL';
+      document.getElementById('status').innerHTML = '⚠️ Код авторизации не получен';
       document.getElementById('redirectInfo').style.display = 'block';
     }
   </script>
