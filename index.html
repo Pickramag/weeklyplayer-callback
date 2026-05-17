@@ -1,22 +1,147 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WeeklyPlayer Auth</title>
-  <script>
-    // Получаем code из URL
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const error = params.get('error');
-    
-    if (error) {
-      document.body.innerHTML = `<h2>Ошибка авторизации: ${error}</h2>`;
-    } else if (code) {
-      // Перенаправляем в приложение через кастомный протокол
-      window.location.href = `weeklyplayer://oauth-callback?code=${encodeURIComponent(code)}`;
-    } else {
-      document.body.innerHTML = '<h2>Ожидание кода авторизации...</h2>';
+  <title>Connecting to WeeklyPlayer...</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
     }
-  </script>
+    .container {
+      text-align: center;
+      padding: 40px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.1);
+      border-top: 4px solid #f97316;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .error {
+      color: #ef4444;
+      margin-top: 20px;
+    }
+    .success {
+      color: #10b981;
+      margin-top: 20px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #f97316;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #ea580c;
+    }
+  </style>
 </head>
-<body></body>
+<body>
+  <div class="container">
+    <h1>🎵 Подключение к WeeklyPlayer</h1>
+    <div class="spinner" id="spinner"></div>
+    <p id="status">Ожидание ответа от приложения...</p>
+    <div id="error" class="error" style="display: none;"></div>
+    <button id="retryBtn" onclick="retry()" style="display: none;">Попробовать снова</button>
+    
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const error = params.get('error');
+      
+      let attemptCount = 0;
+      
+      function attemptRedirect() {
+        if (error) {
+          showError('Ошибка авторизации: ' + error);
+          return;
+        }
+        
+        if (!code) {
+          showError('Код авторизации не получен');
+          return;
+        }
+        
+        attemptCount++;
+        
+        // Пробуем разные методы редиректа
+        const customUrl = 'weeklyplayer://oauth-callback?code=' + encodeURIComponent(code);
+        
+        // Метод 1: window.location
+        window.location.href = customUrl;
+        
+        // Метод 2: window.open (через 500мс)
+        setTimeout(() => {
+          window.open(customUrl, '_blank');
+        }, 500);
+        
+        // Метод 3: создание скрытой ссылки
+        setTimeout(() => {
+          const link = document.createElement('a');
+          link.href = customUrl;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }, 1000);
+        
+        // Если через 3 секунды всё ещё здесь — показываем инструкцию
+        setTimeout(() => {
+          if (attemptCount === 1) {
+            showManualInstructions(code);
+          }
+        }, 3000);
+      }
+      
+      function showError(msg) {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('status').style.display = 'none';
+        document.getElementById('error').textContent = msg;
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('retryBtn').style.display = 'inline-block';
+      }
+      
+      function showManualInstructions(code) {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('status').innerHTML = 
+          '⚠️ Приложение не открылось автоматически.<br>' +
+          'Если WeeklyPlayer запущен — авторизация должна произойти автоматически.<br>' +
+          'Если нет — перезапустите приложение и попробуйте войти снова.';
+        document.getElementById('status').className = 'success';
+        document.getElementById('retryBtn').style.display = 'inline-block';
+      }
+      
+      function retry() {
+        window.location.href = window.location.href;
+      }
+      
+      // Запускаем при загрузке
+      attemptRedirect();
+      
+      // Показываем информацию для отладки
+      console.log('Code:', code);
+      console.log('Redirect URL:', 'weeklyplayer://oauth-callback?code=' + code);
+    </script>
+  </div>
+</body>
 </html>
