@@ -44,13 +44,6 @@
     .icon { font-size: 64px; margin-bottom: 20px; }
     h1 { font-size: 28px; margin-bottom: 15px; font-weight: 600; }
     p { color: #94a3b8; line-height: 1.6; margin-bottom: 10px; }
-    .redirect-text {
-      margin-top: 20px;
-      padding: 15px;
-      background: rgba(249, 115, 22, 0.1);
-      border-radius: 10px;
-      border: 1px solid rgba(249, 115, 22, 0.3);
-    }
   </style>
 </head>
 <body>
@@ -62,13 +55,9 @@
     <div id="success" class="success" style="display: none;">
       ✅ <strong>Успешно!</strong><br>
       Авторизация прошла успешно.<br>
-      Перенаправление в приложение...
+      Возврат в приложение...
     </div>
     <div id="error" class="error" style="display: none;"></div>
-    <div class="redirect-text" id="redirectInfo" style="display: none;">
-      <small>Если перенаправление не произошло автоматически,<br>
-      <a href="#" onclick="window.close(); return false;" style="color: #f97316;">закройте это окно</a> и вернитесь в приложение</small>
-    </div>
   </div>
   
   <script>
@@ -79,33 +68,39 @@
     console.log('🎵 WeeklyPlayer OAuth Callback');
     console.log('Code:', code ? code.substring(0, 20) + '...' : 'none');
     console.log('Error:', error);
-    console.log('Full URL:', window.location.href);
     
-    // Если есть код — показываем успех и ждём
-    // Приложение само обнаружит код в своём окне после редиректа
+    // Отправляем код обратно в приложение
     if (error) {
+      window.opener.postMessage({
+        type: 'AUTH_ERROR',
+        error: error
+      }, '*');
+      
       document.getElementById('spinner').style.display = 'none';
       document.getElementById('status').style.display = 'none';
-      document.getElementById('error').innerHTML = '❌ Ошибка авторизации: ' + error;
+      document.getElementById('error').innerHTML = '❌ Ошибка: ' + error;
       document.getElementById('error').style.display = 'block';
-      document.getElementById('redirectInfo').style.display = 'block';
     } else if (code) {
+      // Отправляем код в главное окно
+      window.opener.postMessage({
+        type: 'AUTH_SUCCESS',
+        code: code
+      }, '*');
+      
       // Показываем успех
       setTimeout(() => {
         document.getElementById('spinner').style.display = 'none';
         document.getElementById('status').style.display = 'none';
         document.getElementById('success').style.display = 'block';
-        document.getElementById('redirectInfo').style.display = 'block';
-      }, 1000);
+      }, 500);
       
-      // Пробуем закрыть окно через 3 секунды
+      // Закрываем окно через 2 секунды
       setTimeout(() => {
         window.close();
-      }, 3000);
+      }, 2000);
     } else {
       document.getElementById('spinner').style.display = 'none';
       document.getElementById('status').innerHTML = '⚠️ Код авторизации не получен';
-      document.getElementById('redirectInfo').style.display = 'block';
     }
   </script>
 </body>
