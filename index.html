@@ -81,29 +81,20 @@
   console.log('Code:', code ? code.substring(0, 20) + '...' : 'none');
   
   if (error) {
-    // Отправляем ошибку
-    if (window.opener) {
-      window.opener.postMessage({
-        type: 'AUTH_ERROR',
-        error: error
-      }, '*');
-    }
+    // Сохраняем ошибку в localStorage
+    localStorage.setItem('wp_auth_error', error);
+    localStorage.setItem('wp_auth_timestamp', Date.now().toString());
     
     document.getElementById('spinner').style.display = 'none';
     document.getElementById('status').style.display = 'none';
     document.getElementById('error').innerHTML = '❌ Ошибка: ' + error;
     document.getElementById('error').style.display = 'block';
   } else if (code) {
-    // 🔥 Отправляем код через postMessage
-    if (window.opener && !window.opener.closed) {
-      console.log('📨 Sending code to opener...');
-      window.opener.postMessage({
-        type: 'AUTH_SUCCESS',
-        code: code
-      }, '*');
-    } else {
-      console.warn('⚠️ No opener window found');
-    }
+    // 🔥 Сохраняем код в localStorage
+    localStorage.setItem('wp_auth_code', code);
+    localStorage.setItem('wp_auth_timestamp', Date.now().toString());
+    
+    console.log('💾 Code saved to localStorage');
     
     // Показываем успех
     setTimeout(() => {
