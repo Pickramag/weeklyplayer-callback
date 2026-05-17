@@ -83,43 +83,30 @@
   </div>
   
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const error = params.get('error');
-    
-    console.log('🎵 WeeklyPlayer OAuth Callback');
-    console.log('Code:', code ? code.substring(0, 20) + '...' : 'none');
-    console.log('Error:', error);
-    
-    if (error) {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const error = params.get('error');
+  
+  if (error) {
+    // Показываем ошибку
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('status').style.display = 'none';
+    document.getElementById('error').innerHTML = '❌ Ошибка: ' + error;
+    document.getElementById('error').style.display = 'block';
+  } else if (code) {
+    // Показываем успех
+    setTimeout(() => {
       document.getElementById('spinner').style.display = 'none';
       document.getElementById('status').style.display = 'none';
-      document.getElementById('error').innerHTML = '❌ Ошибка авторизации: ' + error;
-      document.getElementById('error').style.display = 'block';
-      document.getElementById('redirectInfo').style.display = 'block';
-    } else if (code) {
-      // Показываем успех
-      setTimeout(() => {
-        document.getElementById('spinner').style.display = 'none';
-        document.getElementById('status').style.display = 'none';
-        document.getElementById('success').style.display = 'block';
-      }, 500);
-      
-      // 🔥 Перенаправляем на localhost:1420 (Tauri перехватит в production)
-      setTimeout(() => {
-        console.log('🔄 Redirecting to app:', 'http://localhost:1420?code=' + encodeURIComponent(code));
-        window.location.href = 'http://localhost:1420?code=' + encodeURIComponent(code);
-      }, 1500);
-      
-      // Если не сработало — показываем инструкцию
-      setTimeout(() => {
-        document.getElementById('redirectInfo').style.display = 'block';
-      }, 4000);
-    } else {
-      document.getElementById('spinner').style.display = 'none';
-      document.getElementById('status').innerHTML = '⚠️ Код авторизации не получен';
-      document.getElementById('redirectInfo').style.display = 'block';
-    }
-  </script>
+      document.getElementById('success').style.display = 'block';
+    }, 500);
+    
+    // 🔥 Перенаправляем на localhost:1420 (Tauri перехватит в production)
+    setTimeout(() => {
+      console.log('🔄 Redirecting to:', 'http://localhost:1420?code=' + encodeURIComponent(code));
+      window.location.href = 'http://localhost:1420?code=' + encodeURIComponent(code);
+    }, 1500);
+  }
+</script>
 </body>
 </html>
