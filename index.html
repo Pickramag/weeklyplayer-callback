@@ -23,7 +23,7 @@
     if (code) {
       // 🔥 Перенаправляем на кастомный протокол
       setTimeout(() => {
-        window.location.href = 'weeklyplayer://oauth-callback?code=' + encodeURIComponent(code);
+        window.location.href = 'http://localhost:1420?code=' + encodeURIComponent(code);
       }, 1000);
     }
   </script>
